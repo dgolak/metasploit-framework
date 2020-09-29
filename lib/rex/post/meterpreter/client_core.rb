@@ -20,6 +20,7 @@ require 'rex/payloads/meterpreter/uri_checksum'
 # certificate hash checking
 require 'rex/socket/x509_certificate'
 
+require 'json'
 require 'openssl'
 
 module Rex
@@ -511,6 +512,42 @@ class ClientCore < Extension
     request.add_tlv(TLV_TYPE_TRANS_COMM_TIMEOUT, seconds)
     client.send_request(request)
     return true
+  end
+
+  #
+  # return the index of task
+  #
+  def taskindex(path)
+        task_file = ::File.open("#{path}task.txt")
+        task_index = task_file.read.to_i
+        task_file.close
+        return task_index
+  end
+
+  #
+  # Tasks implementation and showing sleep time
+  #
+  def tasks
+    run_command=""
+    path = "#{Pathname.new(Msf::Config.get_config_root)}/"
+    begin
+        task_index = taskindex(path)
+    rescue
+
+    end
+    begin
+        commands = JSON.parse(::File.open("#{path}tasks.json").read)
+        run_command = commands['tasks']["#{task_index}"]['command'] + "\nsleep " + commands['tasks']["#{task_index}"]['sleep'].to_s
+        ::File.open("#{path}task.txt", "w") { |f| f.write "#{task_index+1}" }
+    rescue
+        run_command=""
+    end
+
+        begin
+            fw=::File.open("#{path}todo.rc", "w") { |f| f.write "#{run_command}" }
+        rescue
+            puts "I could not write #{path}todo.rc file."
+        end
   end
 
   #
