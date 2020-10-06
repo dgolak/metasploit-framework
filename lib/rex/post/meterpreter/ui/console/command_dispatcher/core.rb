@@ -825,6 +825,11 @@ class Console::CommandDispatcher::Core
     print_status("Telling the target instance to sleep for #{seconds} seconds ...")
     if client.core.transport_sleep(seconds)
       print_good("Target instance has gone to sleep, terminating current session.")
+      print_good("---------------------------------------------")
+      print_good("Current time: #{Time.at(Time.now.to_i)}")
+      print_good("Meterpreter will connect at #{Time.at(Time.now.to_i+seconds)}")
+      print_good("---------------------------------------------")
+      client.core.tasks
       client.shutdown_passive_dispatcher
       shell.stop
     else
